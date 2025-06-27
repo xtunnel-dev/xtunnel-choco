@@ -14,20 +14,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y nuget gzip
+      - name: Install gzip
+        run: sudo apt-get update && sudo apt-get install -y gzip
 
       - name: Generate Chocolatey feed index
         run: |
-          mkdir -p xtunnel
           cd xtunnel
 
-          # Create Packages file
+          # Create Packages file (list of .nupkg)
           ls *.nupkg > Packages
 
-          # Create Packages.gz
+          # Create compressed version
           gzip -kf Packages
 
       - name: Commit feed index
