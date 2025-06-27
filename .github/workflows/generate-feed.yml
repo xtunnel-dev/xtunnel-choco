@@ -1,0 +1,33 @@
+name: Generate Chocolatey feed
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'xtunnel/*.nupkg'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.x
+
+      - name: Install nuget-repo tool
+        run: dotnet tool install -g NuGetRepo
+
+      - name: Generate NuGet-compatible index
+        run: nuget-repo xtunnel/ output/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          publish_branch: gh-pages
