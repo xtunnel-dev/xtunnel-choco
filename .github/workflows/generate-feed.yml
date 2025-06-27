@@ -7,27 +7,33 @@ on:
       - 'xtunnel/*.nupkg'
 
 jobs:
-  build:
+  generate-feed:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install .NET SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 6.x
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nuget gzip
 
-      - name: Install nuget-repo tool
-        run: dotnet tool install -g NuGetRepo
+      - name: Generate Chocolatey feed index
+        run: |
+          mkdir -p xtunnel
+          cd xtunnel
 
-      - name: Generate NuGet-compatible index
-        run: nuget-repo xtunnel/ output/
+          # Create Packages file
+          ls *.nupkg > Packages
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./output
-          publish_branch: gh-pages
+          # Create Packages.gz
+          gzip -kf Packages
+
+      - name: Commit feed index
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add xtunnel/Packages*
+          git commit -m "Update Chocolatey feed index" || echo "No changes to commit"
+          git push
